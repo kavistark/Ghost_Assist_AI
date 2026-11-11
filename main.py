@@ -117,6 +117,11 @@ async def startup_event():
     print("=======================================================\n")
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "OPERATIONAL", "callsign": settings.callsign}
+
+
 @app.get("/", response_class=HTMLResponse)
 def root():
     html_path = Path(__file__).resolve().parent / "interface" / "alpha_command.html"
