@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHOST // Tactical Command Center</title>
+    <style>
+        :root {
+            --bg-base: #06090e;
+            --bg-panel: rgba(13, 20, 28, 0.85);
+            --border-dim: #1a2a3a;
+            --border-bright: #00ff88;
+            --accent-green: #00ff88;
+            --accent-cyan: #00e5ff;
+            --accent-red: #ff3366;
+            --accent-yellow: #ffcc00;
+            --text-main: #d0e0ec;
+            --text-dim: #607d94;
+            --font-mono: 'Consolas', 'Courier New', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.03) 0%, transparent 80%),
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        /* Top HUD Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: rgba(8, 12, 18, 0.95);
+            border-bottom: 1px solid var(--border-bright);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.15);
+        }
+
+        .hud-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .hud-brand h1 {
+            font-size: 20px;
+            letter-spacing: 4px;
+            color: var(--accent-green);
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.6);
+        }
+
+        .hud-badge {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 3px 8px;
+            font-size: 10px;
+            letter-spacing: 1px;
+            border-radius: 2px;
+        }
+
+        .hud-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
+        .stat-val {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        /* Main Workspace Grid */
+        main {
+            display: grid;
+            grid-template-columns: 320px 1fr 340px;
+            gap: 16px;
+            padding: 16px 24px;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-dim);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
+        }
+
+        .panel-header {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.3);
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+        }
+
+        .panel-body {
+            padding: 14px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* Gauges & Telemetry */
+        .metric-card {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 3px;
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: #111a24;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-green);
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 6px var(--accent-green);
+        }
+
+        /* Mission Center Terminal */
+        .feed-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 6px;
+        }
+
+        .feed-entry {
+            background: rgba(10, 16, 24, 0.7);
+            border-left: 3px solid var(--border-dim);
+            padding: 10px 14px;
+            border-radius: 0 4px 4px 0;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .feed-entry.ghost {
+            border-left-color: var(--accent-green);
+        }
+
+        .feed-entry.operator {
+            border-left-color: var(--accent-cyan);
+        }
+
+        .feed-entry.security {
+            border-left-color: var(--accent-red);
+        }
+
+        .feed-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .feed-content {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-main);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+            font-size: 11px;
+            color: #9ab4c7;
+        }
+
+        .badge-done {
+            color: var(--accent-green);
+        }
+
+        .badge-pending {
+            color: var(--accent-yellow);
+        }
+
+        /* Input Deck */
+        .command-deck {
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            gap: 10px;
+        }
+
+        .command-input {
+            flex: 1;
+            background: #090e15;
+            border: 1px solid var(--border-dim);
+            border-radius: 3px;
+            color: #fff;
+            padding: 10px 14px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .command-input:focus {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn-action {
+            background: rgba(0, 255, 136, 0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 0 18px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            background: var(--accent-green);
+            color: #000;
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn-quick {
+            background: rgba(26, 42, 58, 0.4);
+            border: 1px solid var(--border-dim);
+            color: var(--accent-cyan);
+            padding: 8px 10px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        .btn-quick:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-dim);
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="hud-brand">
+            <h1>GHOST</h1>
+            <span class="hud-badge">DEFCON 3</span>
+            <span class="hud-badge" style="border-color: var(--accent-cyan); color: var(--accent-cyan);">ALPHA COMMAND NODE</span>
+        </div>
+        <div class="hud-stats">
+            <a href="/voice" style="text-decoration: none; display: flex; align-items: center;">
+                <span class="btn-action" style="padding: 6px 14px; font-size: 11px; border-color: var(--accent-cyan); color: var(--accent-cyan);">🎙 VOICE ASSISTANT HUD</span>
+            </a>
+            <div class="stat-item" style="cursor: pointer;" onclick="toggleVoiceOutput()">
+                <span class="stat-label">VOCAL TRANSMISSION</span>
+                <span class="stat-val" id="voice-toggle" style="color: var(--accent-green);">[🔊 VOICE: ON]</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">DUAL-LLM COGNITION</span>
+                <span class="stat-val" id="llm-status">CLAUDE-ALPHA / GEMINI-BRAVO</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">CONNECTED NODES</span>
+                <span class="stat-val" id="device-count">02 (LAPTOP + ANDROID)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">SECURITY PERIMETER</span>
+                <span class="stat-val" style="color: var(--accent-green);" id="sec-perimeter">ARMED & ACTIVE</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Left Panel: Telemetry & Facility Sensors -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>System Telemetry</span>
+                <span id="telemetry-host">HOST: --</span>
+            </div>
+            <div class="panel-body">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>CPU USAGE</span>
+                        <span id="cpu-val" style="color: var(--accent-green);">--%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="cpu-bar"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>RAM ALLOCATION</span>
+                        <span id="ram-val" style="color: var(--accent-cyan);">-- / -- GB</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="ram-bar" style="background: var(--accent-cyan);"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>POWER CELLS (BATTERY)</span>
+                        <span id="bat-val">--%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="bat-bar" style="background: var(--accent-yellow);"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span>PRIMARY STORAGE (C:\)</span>
+                        <span id="disk-val">-- GB FREE</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="disk-bar" style="background: #aa77ff;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 10px;">
+                    <div style="font-size: 10px; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 1px;">QUICK DIRECTIVES</div>
+                    <div class="quick-actions">
+                        <button class="btn-quick" onclick="sendQuickCommand('Ghost, check system health and report status')">HEALTH AUDIT</button>
+                        <button class="btn-quick" onclick="sendQuickCommand('Ghost, perform defensive security sweep')">SEC SWEEP</button>
+                        <button class="btn-quick" onclick="sendQuickCommand('Ghost, organize workspace files and find duplicates')">FILE TRIAGE</button>
+                        <button class="btn-quick" onclick="sendQuickCommand('Ghost, take a screenshot surveillance capture')">SCREEN CAP</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Panel: Tactical Feed & Command Terminal -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Mission Stream & Directives</span>
+                <span id="ws-indicator" style="color: var(--accent-yellow);">● CONNECTING WS</span>
+            </div>
+            <div class="panel-body">
+                <div class="feed-container" id="feed">
+                    <div class="feed-entry ghost">
+                        <div class="feed-meta">
+                            <span>GHOST CENTRAL CONTROLLER</span>
+                            <span>INITIALIZE</span>
+                        </div>
+                        <div class="feed-content">
+                            GHOST tactical operations initialized, Sir. Dual-LLM intelligence armed. All device nodes standing by for directive dispatch.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="command-deck">
+                <button class="btn-action" id="btn-mic" style="border-color: var(--accent-cyan); color: var(--accent-cyan);" onclick="toggleVoiceInput()" title="Push-to-Talk Voice Input">🎙 MIC</button>
+                <input type="text" id="command-input" class="command-input" placeholder="Enter tactical directive (e.g., 'Ghost, report status' or 'Ghost, plan AI interview mission')..." autofocus autocomplete="off">
+                <button class="btn-action" onclick="submitCommand()">TRANSMIT</button>
+            </div>
+        </div>
+
+        <!-- Right Panel: Mission Registry & Node Status -->
+        <div class="panel">
+            <div class="panel-header">
+                <span>Active Missions</span>
+                <span id="mission-count">0 ACTIVE</span>
+            </div>
+            <div class="panel-body" id="missions-list">
+                <div style="color: var(--text-dim); font-size: 11px; text-align: center; padding: 20px 0;">
+                    No pending missions. Issue a directive to formulate an operational checklist.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const feed = document.getElementById('feed');
+        const cmdInput = document.getElementById('command-input');
+        const wsIndicator = document.getElementById('ws-indicator');
+
+        // Vocal Feedback Synthesizer
+        let vocalFeedbackEnabled = true;
+
+        function toggleVoiceOutput() {
+            vocalFeedbackEnabled = !vocalFeedbackEnabled;
+            const toggleEl = document.getElementById('voice-toggle');
+            if (vocalFeedbackEnabled) {
+                toggleEl.textContent = '[🔊 VOICE: ON]';
+                toggleEl.style.color = 'var(--accent-green)';
+                speakVocalFeedback('Vocal feedback link armed.');
+            } else {
+                toggleEl.textContent = '[🔇 VOICE: OFF]';
+                toggleEl.style.color = 'var(--text-dim)';
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function speakVocalFeedback(text) {
+            if (!vocalFeedbackEnabled || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const cleanText = text.replace(/[*#_`]/g, '').replace(/https?:\/\/\S+/g, '');
+            const utter = new SpeechSynthesisUtterance(cleanText);
+            utter.rate = 1.05;
+            utter.pitch = 0.95;
+            // Select English voice if available
+            const voices = window.speechSynthesis.getVoices();
+            const engVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('David') || v.name.includes('Male') || v.name.includes('Natural')));
+            if (engVoice) utter.voice = engVoice;
+            window.speechSynthesis.speak(utter);
+        }
+
+        // Voice Microphone Input (STT)
+        let recognition = null;
+        let isListening = false;
+
+        function toggleVoiceInput() {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const btnMic = document.getElementById('btn-mic');
+            if (!SpeechRec) {
+                alert("Speech recognition is not supported in this browser. Use Chrome, Edge or Brave.");
+                return;
+            }
+
+            if (isListening && recognition) {
+                recognition.stop();
+                return;
+            }
+
+            recognition = new SpeechRec();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                btnMic.style.background = 'var(--accent-red)';
+                btnMic.style.color = '#fff';
+                btnMic.textContent = '● REC';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                cmdInput.value = transcript;
+                submitCommand();
+            };
+
+            recognition.onerror = () => {
+                resetMicBtn();
+            };
+
+            recognition.onend = () => {
+                resetMicBtn();
+            };
+
+            recognition.start();
+        }
+
+        function resetMicBtn() {
+            isListening = false;
+            const btnMic = document.getElementById('btn-mic');
+            btnMic.style.background = 'rgba(0, 255, 136, 0.15)';
+            btnMic.style.color = 'var(--accent-cyan)';
+            btnMic.textContent = '🎙 MIC';
+        }
+
+        // WebSocket Connection
+        let socket;
+        function connectWebSocket() {
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            socket = new WebSocket(`${proto}//${window.location.host}/ws`);
+
+            socket.onopen = () => {
+                wsIndicator.textContent = '● REAL-TIME SYNC';
+                wsIndicator.style.color = 'var(--accent-green)';
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    handleIncomingEvent(data);
+                } catch(e) {}
+            };
+
+            socket.onclose = () => {
+                wsIndicator.textContent = '○ DISCONNECTED (RETRYING)';
+                wsIndicator.style.color = 'var(--accent-red)';
+                setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        function handleIncomingEvent(event) {
+            if (event.event === "COMMAND_RECEIVED") {
+                addFeedEntry("OPERATOR", event.payload.command, "operator");
+            } else if (event.event === "MISSION_COMPLETED") {
+                addFeedEntry("MISSION CONTROLLER", event.payload.report, "ghost");
+                loadMissions();
+            } else if (event.event === "REMINDER_ALERT") {
+                addFeedEntry("TACTICAL ALARM", event.payload.prompt, "security");
+            }
+        }
+
+        function addFeedEntry(source, message, type = "ghost", checklist = null) {
+            const entry = document.createElement('div');
+            entry.className = `feed-entry ${type}`;
+            
+            let checklistHtml = '';
+            if (checklist && checklist.length > 0) {
+                checklistHtml = '<div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">';
+                checklist.forEach(t => {
+                    const icon = t.status === 'COMPLETED' ? '✔' : '⏳';
+                    const color = t.status === 'COMPLETED' ? 'var(--accent-green)' : 'var(--accent-yellow)';
+                    checklistHtml += `<div class="checklist-item"><span style="color: ${color}; font-weight: bold;">[${icon}]</span> Task ${t.task_id}: ${t.action}</div>`;
+                });
+                checklistHtml += '</div>';
+            }
+
+            entry.innerHTML = `
+                <div class="feed-meta">
+                    <span>${source}</span>
+                    <span>${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="feed-content">${message}</div>
+                ${checklistHtml}
+            `;
+            feed.appendChild(entry);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        async function submitCommand() {
+            const command = cmdInput.value.trim();
+            if (!command) return;
+            cmdInput.value = '';
+
+            addFeedEntry("OPERATOR", command, "operator");
+
+            try {
+                const response = await fetch('/api/command', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({command: command})
+                });
+                const data = await response.json();
+                
+                const checklist = data.plan ? data.plan.checklist : null;
+                addFeedEntry(data.callsign || "GHOST", data.response, "ghost", checklist);
+                loadMissions();
+            } catch (err) {
+                addFeedEntry("SYSTEM ERROR", "Failed to communicate with Command Center: " + err, "security");
+            }
+        }
+
+        function sendQuickCommand(cmd) {
+            cmdInput.value = cmd;
+            submitCommand();
+        }
+
+        cmdInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') submitCommand();
+        });
+
+        // Polling live Telemetry
+        async function updateTelemetry() {
+            try {
+                const res = await fetch('/api/telemetry');
+                const t = await res.json();
+
+                document.getElementById('telemetry-host').textContent = `HOST: ${t.hostname}`;
+                document.getElementById('cpu-val').textContent = `${t.cpu_percent}%`;
+                document.getElementById('cpu-bar').style.width = `${t.cpu_percent}%`;
+
+                document.getElementById('ram-val').textContent = `${t.ram_used_gb} / ${t.ram_total_gb} GB (${t.ram_percent}%)`;
+                document.getElementById('ram-bar').style.width = `${t.ram_percent}%`;
+
+                document.getElementById('bat-val').textContent = `${t.battery_percent}% ${t.power_plugged ? '[AC CHARGING]' : '[BATTERY]'}`;
+                document.getElementById('bat-bar').style.width = `${t.battery_percent}%`;
+
+                document.getElementById('disk-val').textContent = `${t.disk_free_gb} GB FREE (${t.disk_percent}%)`;
+                document.getElementById('disk-bar').style.width = `${t.disk_percent}%`;
+            } catch (e) {}
+        }
+
+        // Load active missions
+        async function loadMissions() {
+            try {
+                const res = await fetch('/api/missions');
+                const missions = await res.json();
+                const container = document.getElementById('missions-list');
+                document.getElementById('mission-count').textContent = `${missions.length} RECORDED`;
+
+                if (missions.length === 0) return;
+
+                container.innerHTML = '';
+                missions.slice(0, 5).forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'metric-card';
+                    card.style.marginBottom = '8px';
+                    card.innerHTML = `
+                        <div class="metric-header">
+                            <span style="color: var(--accent-cyan); font-weight: bold;">${m.mission_id}</span>
+                            <span style="color: ${m.status === 'COMPLETED' ? 'var(--accent-green)' : 'var(--accent-yellow)'}">${m.status}</span>
+                        </div>
+                        <div style="font-size: 11px; margin-bottom: 4px;">${m.title}</div>
+                        <div style="font-size: 9px; color: var(--text-dim);">${m.checklist ? m.checklist.length : 0} objectives registered</div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (e) {}
+        }
+
+        // Init
+        connectWebSocket();
+        updateTelemetry();
+        loadMissions();
+        setInterval(updateTelemetry, 3000);
+        setInterval(loadMissions, 10000);
+    </script>
+</body>
+</html>
+
