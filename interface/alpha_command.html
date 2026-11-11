@@ -204,7 +204,7 @@ function ui(){
     document.getElementById('vstat').textContent=!voice?'[🔇 VOICE: OFF]':(ghostPlaying||tts)?'[🔊 GHOST TRANSMITTING]':live?(mic.lvl>.12?'[🎙 SPEAKING '+Math.round(mic.lvl*100)+'%]':'[🎙 LISTENING]'):muted?'[🔇 MIC: MUTED]':simMic?'[🎙 MIC BLOCKED · SIMULATED]':'[🔊 VOICE: ON]';}
 }
 const vb=document.getElementById('vbtn'),mb=document.getElementById('mbtn');
-const GHOST_HOST='http://127.0.0.1:8080'; // local Ghost server (/api/tts, /api/command)
+const GHOST_HOST = window.location.origin;
 const ghostAudio=new Audio();let ghostSrc=null,recognition=null,busy=false;
 const termBody=document.getElementById('live-term-body'),tin=document.getElementById('tin');
 const mbtn=(x,p)=>{mb.textContent=x;mb.setAttribute('aria-pressed',p);};

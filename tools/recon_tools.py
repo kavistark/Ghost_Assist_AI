@@ -8,7 +8,10 @@ import json
 import urllib.request
 from pathlib import Path
 from typing import Dict, Any, Optional
-import cv2
+try:
+    import cv2
+except ImportError:
+    cv2 = None
 
 from config import settings
 from llm.gemini_client import GeminiClient
@@ -27,6 +30,10 @@ class ReconnaissanceEngine:
 
     def capture_camera_feed(self, camera_index: int = 0) -> Optional[Path]:
         """Captures a real-time visual frame from the hardware optical sensor."""
+        if cv2 is None:
+            print("[RECON ERROR] OpenCV (cv2) is not installed in this environment.")
+            return None
+
         cap = cv2.VideoCapture(camera_index)
         if not cap.isOpened():
             print("[RECON ERROR] Camera interface could not be opened.")

@@ -14,7 +14,13 @@ scheduler = AsyncIOScheduler()
 def initialize_scheduler():
     """Starts the asynchronous tactical scheduler if not already running."""
     if not scheduler.running:
-        scheduler.start()
+        try:
+            import asyncio
+            asyncio.get_running_loop()
+            scheduler.start()
+        except RuntimeError:
+            # When loaded in synchronous setup (e.g. Django app ready), defer starting
+            pass
 
 
 def schedule_reminder(run_at: datetime, prompt: str, reminder_id: Optional[str] = None):

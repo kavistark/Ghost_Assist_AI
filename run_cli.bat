@@ -6,6 +6,5 @@ echo    GHOST PERSONAL AI INTELLIGENCE SYSTEM — INTERACTIVE CLI
 echo    Clearance: DEFCON 3
 echo ========================================================================
 echo.
-python main.py --cli
+python manage.py ghost_cli
 pause
-
