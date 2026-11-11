@@ -1,0 +1,30 @@
+# GHOST Core Dependencies
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+websockets>=13.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+python-dotenv>=1.0.1
+
+# AI Intelligence Models
+anthropic>=0.40.0
+google-genai>=1.0.0
+
+# Task Scheduling & Storage
+apscheduler>=3.10.4
+sqlalchemy>=2.0.35
+aiosqlite>=0.20.0
+
+# System & Hardware Telemetry (Windows Agent)
+psutil>=6.1.0
+pywin32>=308; sys_platform == 'win32'
+mss>=9.0.1
+pillow>=11.0.0
+
+# Voice Processing (Edge & Offline)
+edge-tts>=6.1.12
+# Optional local voice packages (can be installed on demand)
+# faster-whisper
+# openwakeword
+# sounddevice
+
