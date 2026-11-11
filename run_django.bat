@@ -5,6 +5,6 @@ echo =======================================================
 echo    GHOST PERSONAL AI INTELLIGENCE SYSTEM (DJANGO)
 echo =======================================================
 echo.
+cd ghost_app
 python manage.py runserver 127.0.0.1:8000
 pause
-
